@@ -1,28 +1,27 @@
 <?php
 require_once "modelo/Turma.php";
 
+header("Content-Type: application/json");
 $textoJsonRecebidoCorpoPUT = file_get_contents('php://input');
-$objJsonRecebido = json_decode($textoJsonRecebidoCorpoPUT);
-
+$objJson = json_decode($textoJsonRecebidoCorpoPUT);
 $objResposta = new stdClass();
-
 $objTurma = new Turma();
-
-$objTurma->setIdTurma($parametro_idTurma);
-$objTurma->setSerieTurma($objJsonRecebido->serieTurma);
-$objTurma->setRepresentanteTurma($objJsonRecebido->representante);
-
-if ($objJsonRecebido->serieTurma == "") {
-    $objResposta->cod = 1;
-    $objResposta->status = false;
-    $objResposta->msg = "A serieTurma não pode ser vazio";
-} else {
-    $objResposta->cod = 4;
+try{
+    if ($objJson === null && json_last_error() !== JSON_ERROR_NONE)
+        throw new Exception('Formato JSON inválido');
+    $objTurma->setIdTurma($parametro_idTurma);
+    $objTurma->setSerieTurma($objJson->serieTurma);
+    $objTurma->setRepresentanteTurma($objJson->representante);
+    if ($objTurma->getSerieTurma() == "")
+        throw new Exception("A serieTurma não pode ser vazio!");
+    else if($objTurma->update() == false)
+        throw new Exception("Houve um erro na tentativa de atualização!");
     $objResposta->status = true;
     $objResposta->msg = "Atualizado com sucesso";
-    $objResposta->dados = $objTurma->update();
+    header("Content-Type: application/json");
+    header("HTTP/1.1 201 OK");
+} catch(Exception $e){
+    $objResposta->status = false;
+    $objResposta->msg = $e->getMessage();
 }
-
-header("Content-Type: application/json");
-header("HTTP/1.1 201 OK");
 echo json_encode($objResposta);

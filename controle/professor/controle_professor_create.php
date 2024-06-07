@@ -1,46 +1,38 @@
 <?php
-require_once ("modelo/Banco.php");
 require_once ("modelo/Professor.php");
-$textoRecebido = file_get_contents("php://input");
-$objJson = json_decode($textoRecebido) or die('{"formato incorreto"}');
-
-$objResposta = new stdClass();
-$objTurma = new Professor();
-
-if ($objJsonRecebido->nomeProfessor == "") {
-    $objResposta->cod = 1;
-    $objResposta->status = false;
-    $objResposta->msg = "O nome não pode ser vazio";
-} else if($objJsonRecebido->idadeProfessor == ""){
-    $objResposta->cod = 1;
-    $objResposta->status = false;
-    $objResposta->msg = "A idade não pode ser vazio";
-} else if($objJsonRecebido->Formacao == ""){
-    $objResposta->cod = 1;
-    $objResposta->status = false;
-    $objResposta->msg = "A formação não pode ser vazio";
-} if ($objTurma->isProfessor($objJsonRecebido->nomeProfessor) == true) {
-    $objResposta->cod = 3;
-    $objResposta->status = false;
-    $objResposta->msg = "já existe um funcionário cadastrado com o nome: " . $objJsonRecebido->nomeProfessor;
-} else {
-    $objTurma->setNome($objJson->nomeProfessor);
-    $objTurma->setIdade($objJson->idadeProfessor);
-    $objTurma->setFormacao($objJson->Formacao);
-    if ($objTurma->create() == true) {
-        $objResposta->cod = 4;
-        $objResposta->status = true;
-        $objResposta->msg = "Cadastrado com sucesso";
-        $objResposta->dados = $objTurma;
-    } else {
-        $objResposta->cod = 5;
-        $objResposta->status = false;
-        $objResposta->msg = "Ocorreu um erro ao cadastrar a Turma";
-        $objResposta->dados = $objTurma;
-    }
-}
-
 header("Content-Type: application/json");
-header("HTTP/1.1 201 OK");
-echo json_encode($objResposta);
+$textoRecebido = file_get_contents("php://input");
+$objJson = json_decode($textoRecebido);
+$objResposta = new stdClass();
+$objProf = new Professor();
+
+try{
+    if ($objJson === null && json_last_error() !== JSON_ERROR_NONE)
+        throw new Exception('Formato JSON inválido');
+    else if (empty($objJson->nomeProfessor))
+        throw new Exception("O nome não pode ser vazio!");
+    else if(empty($objJson->idadeProfessor))
+        throw new Exception("A idade não pode ser vazio!");
+    else if(empty($objJson->Formacao))
+        throw new Exception("A formação não pode ser vazio");
+    else if ($objProf->isProfessor($objJson->nomeProfessor) == true)
+        throw new Exception("Já existe um funcionário cadastrado com o nome: " . $objJson->nomeProfessor);
+    
+    $objProf->setNome($objJson->nomeProfessor);
+    $objProf->setIdade($objJson->idadeProfessor);
+    $objProf->setFormacao($objJson->Formacao);
+    if ($objProf->create() == false)
+        throw new Exception("Ocorreu um erro ao cadastrar o Professor.");
+
+    $objResposta->status = true;
+    $objResposta->msg = "Professor criado com sucesso!";
+    $objResposta->dados = $objProf;
+
+    header("Content-Type: application/json");
+    header("HTTP/1.1 201 OK");
+} catch (Exception $e){
+    $objResposta->status = false;
+    $objResposta->msg = $e->getMessage();
+}
+    echo json_encode($objResposta);
 ?>

@@ -55,7 +55,6 @@ class Professor implements JsonSerializable
         $prepararSql = $conexao->prepare("SELECT * FROM Professor ORDER BY id_professor");
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
-
         $turmas = array();
         $i = 0;
         while ($tuplaBanco = $matrizResultados->fetch_object()) {
@@ -80,18 +79,10 @@ class Professor implements JsonSerializable
         $prepararSql->bind_param("s", $this->idProf);
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
-        $professores = array();
-        while ($tuplaBanco = $matrizResultados->fetch_object()) {
-            $professor = new Professor();
-            $professor->setIdProfessor($tuplaBanco->id_professor);
-            $professor->setNome($tuplaBanco->nome_professor);
-            $professor->setIdade($tuplaBanco->idade);
-            $professor->setFormacao($tuplaBanco->formacao);
-            $professores[0] = $professor;
-        }
+        $matrizResultados = $matrizResultados->fetch_all(MYSQLI_ASSOC);
         $prepararSql->close();
 
-        return $professores;
+        return $matrizResultados;
     }
 
     public function update()

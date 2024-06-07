@@ -1,7 +1,6 @@
 <?php
 require_once "modelo/Banco.php";
-class Turma implements JsonSerializable
-{
+class Turma implements JsonSerializable{
     private $idTurma;
     private $serieTurma;
     private $representanteTurma;
@@ -47,27 +46,15 @@ class Turma implements JsonSerializable
 
         return $tuplaBanco->qtd > 0;
     }
-    public function readAll()
-    {
+    public function readAll(){
         $conexao = Banco::getConexao();
         $prepararSql = $conexao->prepare("SELECT * FROM Turmas ORDER BY id_turma");
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
-
-        $turmas = array();
-        $i = 0;
-        while ($tuplaBanco = $matrizResultados->fetch_object()) {
-
-            $turma = new Turma();
-            $turma->setIdTurma($tuplaBanco->id_turma);
-            $turma->setSerieTurma($tuplaBanco->serie);
-            $turma->setRepresentanteTurma($tuplaBanco->nome_representante);
-            $turmas[$i] = $turma;
-            $i = $i + 1;
-        }
+        $matrizResultados = $matrizResultados->fetch_all(MYSQLI_ASSOC);
         $prepararSql->close(); 
 
-        return $turmas;
+        return $matrizResultados;
     }
 
     public function readById()
@@ -76,18 +63,11 @@ class Turma implements JsonSerializable
         $prepararSql = $conexao->prepare("SELECT * FROM Turmas where id_turma=?");
         $prepararSql->bind_param("s", $this->idTurma);
         $prepararSql->execute();
-        $matrizResultados = $prepararSql->get_result();
-        $turmas = array();
-        while ($tuplaBanco = $matrizResultados->fetch_object()) {
-            $turma = new Turma();
-            $turma->setIdTurma($tuplaBanco->id_turma);
-            $turma->setSerieTurma($tuplaBanco->serie);
-            $turma->setRepresentanteTurma($tuplaBanco->nome_representante);
-            $turmas[0] = $turma;
-        }
+        $vetorResultado = $prepararSql->get_result();
+        $vetorResultado = $vetorResultado->fetch_all(MYSQLI_ASSOC);
         $prepararSql->close();
 
-        return $turmas;
+        return $vetorResultado;
     }
 
     public function update()

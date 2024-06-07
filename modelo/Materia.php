@@ -1,18 +1,15 @@
 <?php
 require_once "modelo/Banco.php";
 
-class Materia implements JsonSerializable
-{
+class Materia implements JsonSerializable{
     private $idMateria;
     private $nomeMateria;
     private $idProfessor;
     private $idTurma;
 
     #[\ReturnTypeWillChange]
-    public function jsonSerialize()
-    {   
+    public function jsonSerialize(){   
         $objResposta = new stdClass();
-
         $objResposta->idMateria = $this->getIdMateria();
         $objResposta->nomeMateria = $this->getNomeMateria();
         $objResposta->idProfessor = $this->getIdProfessor();
@@ -37,14 +34,13 @@ class Materia implements JsonSerializable
         $prepararSql->bind_param("i", $this->idMateria);
         $executou = $prepararSql->execute();
         $prepararSql->close();
-
         return $executou;
     }
 
-    public function isMateria($nome, $idProf, $idTurma){
+    public function isMateria($obj){
         $conexao = Banco::getConexao();
         $prepararSql = $conexao->prepare("SELECT COUNT(*) as qtd FROM Materias WHERE nome_materia = ? and id_turma = ? and id_professor = ?");
-        $prepararSql->bind_param("sii", $nome, $idTurma, $idProf);
+        $prepararSql->bind_param("sii", $obj->nome_materia, $obj->id_turma, $obj->id_professor);
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
         $tuplaBanco = $matrizResultados->fetch_object();
@@ -52,53 +48,28 @@ class Materia implements JsonSerializable
         return $tuplaBanco->qtd > 0;
     }
 
-    public function readAll()
-    {
-        $conexao = Banco::getConexao();
-        $prepararSql = $conexao->prepare("SELECT * FROM Materias ORDER BY id_Materia");
+    public function readAll(){
+        $prepararSql = Banco::getConexao()->prepare("SELECT * FROM Materias ORDER BY id_Materia");
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
+        $matrizResultados = $matrizResultados->fetch_all(MYSQLI_ASSOC);
 
-        $materias = array();
-        $i = 0;
-        while ($tuplaBanco = $matrizResultados->fetch_object()) {
-
-            $materia = new Materia();
-            $materia->setIdMateria($tuplaBanco->id_Materia);
-            $materia->setNomeMateria($tuplaBanco->nome_materia);
-            $materia->setIdProfessor($tuplaBanco->id_professor);
-            $materia->setIdTurma($tuplaBanco->id_Turma);
-            $materias[$i] = $materia;
-            $i = $i + 1;
-        }
-        $prepararSql->close(); 
-
-        return $materias;
+        return $matrizResultados;
     }
 
-    public function readById()
-    {
+    public function readById(){
         $conexao = Banco::getConexao();
         $prepararSql = $conexao->prepare("SELECT * FROM Materias WHERE id_Materia = ?");
         $prepararSql->bind_param("i", $this->idMateria);
         $prepararSql->execute();
         $matrizResultados = $prepararSql->get_result();
-        $materias = array();
-        while ($tuplaBanco = $matrizResultados->fetch_object()) {
-            $materia = new Materia();
-            $materia->setIdMateria($tuplaBanco->id_Materia);
-            $materia->setNomeMateria($tuplaBanco->nome_materia);
-            $materia->setIdProfessor($tuplaBanco->id_professor);
-            $materia->setIdTurma($tuplaBanco->id_Turma);
-            $materias[0] = $materia;
-        }
+        $matrizResultados = $matrizResultados->fetch_all(MYSQLI_ASSOC);
         $prepararSql->close();
 
-        return $materias;
+        return $matrizResultados;
     }
 
-    public function update()
-    {
+    public function update(){
         $conexao = Banco::getConexao();
         $prepararSql = $conexao->prepare("UPDATE Materias SET nome_materia = ?, id_professor = ?, id_turma = ? WHERE id_Materia = ?");
         $prepararSql->bind_param("siii", $this->nomeMateria, $this->idProfessor, $this->idTurma, $this->idMateria);
@@ -110,39 +81,23 @@ class Materia implements JsonSerializable
 
     // GETs E SETs
 
-    public function getIdMateria()
-    {
-        return $this->idMateria;
-    }
-    public function setIdMateria($idMateria)
-    {
+    public function getIdMateria(){ return $this->idMateria; }
+    public function setIdMateria($idMateria){
         $this->idMateria = $idMateria;
         return $this;
     }
-    public function getNomeMateria()
-    {
-        return $this->nomeMateria;
-    }
-    public function setNomeMateria($nomeMateria)
-    {
+    public function getNomeMateria(){ return $this->nomeMateria; }
+    public function setNomeMateria($nomeMateria){
         $this->nomeMateria = $nomeMateria;
         return $this;
     }
-    public function getIdProfessor()
-    {
-        return $this->idProfessor;
-    }
-    public function setIdProfessor($idProfessor)
-    {
+    public function getIdProfessor(){ return $this->idProfessor; }
+    public function setIdProfessor($idProfessor){
         $this->idProfessor = $idProfessor;
         return $this;
     }
-    public function getIdTurma()
-    {
-        return $this->idTurma;
-    }
-    public function setIdTurma($idTurma)
-    {
+    public function getIdTurma(){ return $this->idTurma; }
+    public function setIdTurma($idTurma){
         $this->idTurma = $idTurma;
         return $this;
     }

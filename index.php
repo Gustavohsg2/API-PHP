@@ -4,7 +4,6 @@ require_once "modelo/Router.php";
 
 $router = new Router();
 
-
 $router->post('/turmas', function () {
   require_once "controle/turma/controle_turma_create.php";
 });
